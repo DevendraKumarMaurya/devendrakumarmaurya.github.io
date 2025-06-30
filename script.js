@@ -64,7 +64,7 @@ window.addEventListener('scroll', () => {
 // Contact form handling
 const contactForm = document.getElementById('contactForm');
 
-contactForm.addEventListener('submit', function(e) {
+contactForm.addEventListener('submit', async function(e) {
     e.preventDefault();
     
     // Get form data
@@ -85,11 +85,36 @@ contactForm.addEventListener('submit', function(e) {
         return;
     }
     
-    // Simulate form submission
-    showNotification('Thank you for your message! I\'ll get back to you soon.', 'success');
+    // Show loading state
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Sending...';
+    submitBtn.disabled = true;
     
-    // Reset form
-    this.reset();
+    try {
+        // Submit to Formspree
+        const response = await fetch('https://formspree.io/f/mpwrbpae', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json'
+            },
+            body: formData
+        });
+        
+        if (response.ok) {
+            showNotification('Thank you for your message! I\'ll get back to you soon.', 'success');
+            this.reset();
+        } else {
+            throw new Error('Network response was not ok');
+        }
+    } catch (error) {
+        showNotification('Sorry, there was an error sending your message. Please try again.', 'error');
+        console.error('Form submission error:', error);
+    } finally {
+        // Reset button state
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+    }
 });
 
 // Email validation
